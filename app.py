@@ -16,6 +16,7 @@ def exists(url):
 Insert link into webgraph and return success or fail
 @param url URL to be inserted/updated in graph
 @modify Graph by adding outlinks from url to corresponding nodes in graph
+@return True if successful
 '''
 def update(url):
 	pass
@@ -23,6 +24,7 @@ def update(url):
 '''
 Get next links, post to crawling, and remove from queue after confirmation
 @param max Maximum number of links to crawl
+@modify queue by removing links once they have been sent
 @return Returns list of max number of links to be crawled
 '''
 def get_next_crawl(max):
