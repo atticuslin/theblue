@@ -17,6 +17,7 @@ Insert link into webgraph and return success or fail
 POST at /update
 @param url_list URL list to be inserted/updated in graph
 @modify Graph by adding outlinks from url to corresponding nodes in graph
+@modify Queue if a URL is not in the graph already 
 @Return True if successful and return 200 code
 '''
 def update(url_list):
