@@ -14,17 +14,18 @@ def exists(url):
 
 '''
 Insert link into webgraph and return success or fail
-@param url URL to be inserted/updated in graph
+POST at /update
+@param url_list URL list to be inserted/updated in graph
 @modify Graph by adding outlinks from url to corresponding nodes in graph
-@return True if successful
+@Return True if successful and return 200 code
 '''
-def update(url):
+def update(url_list):
 	pass
 
 '''
 Get next links, post to crawling, and remove from queue after confirmation
 @param max Maximum number of links to crawl
-@modify queue by removing links once they have been sent
+@modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
 '''
 def get_next_crawl(max):
@@ -32,7 +33,7 @@ def get_next_crawl(max):
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
-POST sent to /rank_list
+POST received at /rank_list
 @param l list of links to rank in order
 @return list of links ranked by pagerank
 '''
@@ -55,7 +56,7 @@ def testing():
 		*Use neo4j get functions to test if links are added to graph
 		Call update on an empty graph with test url
 		Assert that graph now has test url
-		Call update with test url that is in the graph already
+		Call update with list of one test url that is in the graph already
 		Assert that new outlinks are created and that old inlinks are deleted
 		'''
 
