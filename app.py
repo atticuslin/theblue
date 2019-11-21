@@ -37,7 +37,7 @@ def get_next_crawl(max):
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
 POST received at /rank_list
 @param l list of links to rank in order
-@return list of links ranked by pagerank
+@return dictionary of links -> pagerank score
 '''
 def rank(l):
 	pass
@@ -72,7 +72,7 @@ def testing():
 	def rank_test():
 		'''
 		Create graph with 10 nodes
-		Assert that rank(list of the 10 urls in graph) returns a list with them properly ranked via PageRank
-		Assert that rank(empty list) returns empty list
-		Assert that rank(list of 3 urls not in graph) returns empty list
+		Assert that rank(list of the 10 urls in graph) returns a list with expected PageRank scores
+		Assert that rank(empty list) returns empty dictionary
+		Assert that rank(list of 3 urls not in graph) returns has all zero values
 		'''
