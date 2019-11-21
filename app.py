@@ -1,7 +1,7 @@
 #LSPT Search Engine, Team theblue
 
 crawl_links = []
-graph = {} #Will be created in neo4j
+graph = {} #Will be created in neo4j, dictionary is just a placeholder
 
 
 '''
@@ -17,6 +17,7 @@ Insert link into webgraph and return success or fail
 POST at /update
 @param url_list URL list to be inserted/updated in graph
 @modify Graph by adding outlinks from url to corresponding nodes in graph
+@modify Queue if a URL is not in the graph already 
 @Return True if successful and return 200 code
 '''
 def update(url_list):
@@ -24,6 +25,7 @@ def update(url_list):
 
 '''
 Get next links, post to crawling, and remove from queue after confirmation
+POST links to /crawl
 @param max Maximum number of links to crawl
 @modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
@@ -35,7 +37,7 @@ def get_next_crawl(max):
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
 POST received at /rank_list
 @param l list of links to rank in order
-@return list of links ranked by pagerank
+@return dictionary of links -> pagerank score
 '''
 def rank(l):
 	pass
@@ -70,7 +72,7 @@ def testing():
 	def rank_test():
 		'''
 		Create graph with 10 nodes
-		Assert that rank(list of the 10 urls in graph) returns a list with them properly ranked via PageRank
-		Assert that rank(empty list) returns empty list
-		Assert that rank(list of 3 urls not in graph) returns empty list
+		Assert that rank(list of the 10 urls in graph) returns a list with expected PageRank scores
+		Assert that rank(empty list) returns empty dictionary
+		Assert that rank(list of 3 urls not in graph) returns has all zero values
 		'''
