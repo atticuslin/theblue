@@ -1,7 +1,7 @@
 #LSPT Search Engine, Team theblue
 
 crawl_links = []
-graph = {} #Will be created in neo4j
+graph = {} #Will be created in neo4j, dictionary is just a placeholder
 
 
 '''
@@ -25,6 +25,7 @@ def update(url_list):
 
 '''
 Get next links, post to crawling, and remove from queue after confirmation
+POST links to /crawl
 @param max Maximum number of links to crawl
 @modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
