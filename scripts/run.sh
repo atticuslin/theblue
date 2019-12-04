@@ -1,2 +1,2 @@
 ./start_neo4j.sh
-gunicorn ../api/api:app
+gunicorn api:app --chdir ../api
