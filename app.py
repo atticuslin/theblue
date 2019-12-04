@@ -1,8 +1,72 @@
 #LSPT Search Engine, Team theblue
+from flask import Flask, request, jsonify
+from flask_api import status
+import requests
 
-crawl_links = []
+
+app = Flask(__name__)
+
+
+CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
+alternator = 0
+
+crawl_links = ["rpi.edu", "cs.rpi.edu", ]
 graph = {} #Will be created in neo4j, dictionary is just a placeholder
 
+
+def get_crawling_endpoint():
+	alternator = not alternator
+	return CRAWLING_ENDPOINTS[alternator]
+
+@app.route('/rank_list', methods = ['POST'])
+def rank_list():
+	if request.method == 'POST':
+		print("Received Ranking Request")
+		url_list = request.get_json(force=True)['urls']
+		print("Url list: ", url_list)
+		pagerank_vals = rank(url_list)
+		print("Values: ", pagerank_vals)
+		return jsonify(pagerank_vals), status.HTTP_200_OK
+	else:
+		#TODO: Confirm Error state
+		return "Error", status.HTTP_501_NOT_IMPLEMENTED
+
+#TODO: Currently assumes there is just one link and docid but double check
+@app.route('/update', methods = ['POST'])
+def update():
+	if request.method == 'POST':
+		print("Received update:")
+		request_data = request.get_json(force=True)
+		crawled_link = request_data['crawled_link']
+		print("Crawled link: ", crawled_link)
+		docid = request_data['docid']
+		print("docid: ", docid)
+		outlinks = request_data['outlinks']
+		print("outlinks: ", outlinks)
+		#TODO: If receiving multiple links, add loop here
+		result = update(docid, crawled_link, outlinks)
+		print("result: ", result)
+		if result:
+			print("Returned Success")
+			return "ok", status.HTTP_200_OK
+		else:
+			#TODO: Proper error messages
+			print("Error")
+			return "not ok", status.HTTP_500_INTERNAL_SERVER_ERROR
+	else:
+		#TODO: Confirm Error state
+		return "Error", status.HTTP_501_NOT_IMPLEMENTED
+
+#TODO: Test POST request success
+def crawl():
+	linkstosend = dict()
+	linkstosend['urls'] = get_next_crawl()
+	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
+	response.raise_for_status()
+
+@app.route('/test')
+def testAPI():
+	return "Working!"
 
 '''
 Returns true if url exists in graph
@@ -13,6 +77,7 @@ def exists(url):
 	pass
 
 '''
+TODO: Fix comments to reflect single link being added, not multiple
 Insert link into webgraph and return success or fail
 POST at /update
 @param url_list dictionary of links and links they list to to be inserted/updated in graph
@@ -21,7 +86,8 @@ POST at /update
 @Return True if successful and return 200 code
 TODO: If leaf node's inlinks are deleted, remove from graph so it's not just floating around?
 '''
-def update(url_list):
+def update(docid, link, url_list):
+	# return True
 	pass
 
 '''
@@ -31,8 +97,11 @@ POST links to /crawl
 @modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
 '''
-def get_next_crawl(max):
-	pass
+def get_next_crawl():
+	outlist = []
+	for ii in range(len(crawl_links)):
+		outlist.append(crawl_links.pop(0))
+	return outlist
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
@@ -41,7 +110,7 @@ POST received at /rank_list
 @return dictionary of links -> pagerank score
 '''
 def rank(l):
-	pass
+	return {'fake value' : 2.5, 'fake value 2' : 5.0}
 
 
 def testing():
@@ -77,3 +146,6 @@ def testing():
 		Assert that rank(empty list) returns empty dictionary
 		Assert that rank(list of 3 urls not in graph) returns has all zero values
 		'''
+
+if __name__ == '__main__':
+	app.run(host='0.0.0.0', port = 80)
