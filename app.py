@@ -10,7 +10,7 @@ app = Flask(__name__)
 CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
 alternator = 0
 
-crawl_links = ["rpi.edu", "cs.rpi.edu", ]
+crawl_links = []
 graph = {} #Will be created in neo4j, dictionary is just a placeholder
 
 
@@ -73,17 +73,17 @@ Returns true if url exists in graph
 @param url URL whose existance this function checks
 @return True if URL is in graph
 '''
-def exists(url):
+def url_exists(url):
 	pass
 
 '''
-TODO: Fix comments to reflect single link being added, not multiple
 Insert link into webgraph and return success or fail
-POST at /update
-@param url_list dictionary of links and links they list to to be inserted/updated in graph
+@param docid, the docid associated to the link being added to the graph
+@param links, the url being added
+@param url_list list of out links for the url being added
 @modify Graph by adding outlinks from url to corresponding nodes in graph and new nodes if outlinked urls are new
 @modify Queue if a key URL is not in the graph already 
-@Return True if successful and return 200 code
+@Return True if successful and False otherwise
 TODO: If leaf node's inlinks are deleted, remove from graph so it's not just floating around?
 '''
 def update(docid, link, url_list):
@@ -104,12 +104,11 @@ def get_next_crawl():
 	return outlist
 
 '''
-l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
-POST received at /rank_list
-@param l list of links to rank in order
+toRank is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
+@param toRank list of links to rank in order
 @return dictionary of links -> pagerank score
 '''
-def rank(l):
+def rank(toRank):
 	return {'fake value' : 2.5, 'fake value 2' : 5.0}
 
 
