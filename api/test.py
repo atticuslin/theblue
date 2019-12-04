@@ -1,7 +1,7 @@
 import unittest
 import random
 
-from app import exists as url_exists, update, get_next_crawl, get_out_links, rank
+from api import exists as url_exists, update, get_next_crawl, get_out_links, rank
 
 '''
 Generates random test data to be used with the graph
