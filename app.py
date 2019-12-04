@@ -7,10 +7,16 @@ import requests
 app = Flask(__name__)
 
 
-CRAWLING_ENDPOINT = None
-crawl_links = []
+CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
+alternator = 0
+
+crawl_links = ["rpi.edu", "cs.rpi.edu", ]
 graph = {} #Will be created in neo4j, dictionary is just a placeholder
 
+
+def get_crawling_endpoint():
+	alternator = not alternator
+	return CRAWLING_ENDPOINTS[alternator]
 
 @app.route('/rank_list', methods = ['POST'])
 def rank_list():
@@ -54,10 +60,8 @@ def update():
 #TODO: Test POST request success
 def crawl():
 	linkstosend = dict()
-	linkstosend['urls'] = []
-	for ii in range(len(crawl_links)):
-		linkstosend['urls'] = crawl_links.pop(0)
-	response = requests.post(CRAWLING_ENDPOINT + '/crawl', json=linkstosend)
+	linkstosend['urls'] = get_next_crawl()
+	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
 	response.raise_for_status()
 
 @app.route('/test')
@@ -93,8 +97,11 @@ POST links to /crawl
 @modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
 '''
-def get_next_crawl(max):
-	pass
+def get_next_crawl():
+	outlist = []
+	for ii in range(len(crawl_links)):
+		outlist.append(crawl_links.pop(0))
+	return outlist
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
