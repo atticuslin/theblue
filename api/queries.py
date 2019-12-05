@@ -17,15 +17,20 @@ class QueryString():
     '''
     update = (
         "MERGE (n:Page {url: $url})\n"
-        "SET n.visited = true\n"
+        "SET n.crawled = true\n"
         "SET n.doc_id = $doc_id\n"
         "WITH n\n"
         "OPTIONAL MATCH (n)-[old:LINKSTO]->()\n"
         "DELETE old\n"
-        "FOREACH (o IN $outlinks |\n"
-        "    MERGE (outlink:Page {url: o})\n"
-        "    MERGE (n)-[:LINKSTO]->(outlink)\n"
-        ")\n"
+        "WITH n\n"
+        "UNWIND $outlinks AS o\n"
+        "MERGE (outlink:Page {url: o})\n"
+        "MERGE (n)-[:LINKSTO]->(outlink)\n"
+        "RETURN outlink.url AS url, EXISTS(outlink.crawled) AND outlink.crawled AS crawled\n"
+        # "FOREACH (o IN $outlinks |\n"
+        # "    MERGE (outlink:Page {url: o})\n"
+        # "    MERGE (n)-[:LINKSTO]->(outlink)\n"
+        # ")\n"
     )
     
     
@@ -34,8 +39,8 @@ class QueryString():
     '''
     update_pagerank = (
         "CALL algo.pageRank("
-        "'MATCH (p:Page) WHERE p.visited RETURN id(p) as id', "
-        "'MATCH (p1:Page)-[:LINKSTO]->(p2:Page) WHERE p2.visited RETURN id(p1) as source, id(p2) as target', "
+        "'MATCH (p:Page) WHERE p.crawled RETURN id(p) as id', "
+        "'MATCH (p1:Page)-[:LINKSTO]->(p2:Page) WHERE p2.crawled RETURN id(p1) as source, id(p2) as target', "
         "{graph: 'cypher', iterations:20, dampingFactor:0.85, "
         "write: true, writeProperty:'pagerank'})\n"
     )
@@ -53,12 +58,22 @@ class QueryString():
     
     
     '''
+    Query string for getting all uncrawled nodes
+    '''
+    get_uncrawled_urls = (
+        "MATCH (n:Page)\n"
+        "WHERE NOT EXISTS(n.crawled) OR NOT n.crawled\n"
+        "RETURN n.url AS url\n"
+    )
+    
+    
+    '''
     Query string for getting a page's outlinks
     Cypher params: $url
     '''
     get_outlinks = (
         "MATCH (:Page {url: $url})-->(out)\n"
-        "RETURN out.url AS url, out.visited as visited\n"
+        "RETURN out.url AS url, EXISTS(out.crawled) AND out.crawled AS crawled\n"
     )
     
     
@@ -120,12 +135,14 @@ class Driver():
     @param doc_id document ID of base node to update
     @param url URL of base node to update
     @param outlinks list of outlinks of base node
+    @return list of dicts for each outlink node with url and crawled keys
     '''
     def update(self, doc_id: str, url: str, outlinks: List[str]):
-        self.run_cypher(QueryString.update,
-                        parameters={"doc_id": doc_id,
-                                    "url": url,
-                                    "outlinks": outlinks})
+        result = self.run_cypher(QueryString.update,
+                                 parameters={"doc_id": doc_id,
+                                             "url": url,
+                                             "outlinks": outlinks})
+        return result.data()
 
 
     '''
@@ -145,7 +162,16 @@ class Driver():
                                  parameters={"doc_ids": doc_ids})
         data = result.data()
         return {n["doc_id"]: n["pagerank"] for n in data}
-
+    
+    
+    '''
+    Get all uncrawled urls
+    @return list of uncrawled urls
+    '''
+    def get_uncrawled_urls(self):
+         result = self.run_cypher(QueryString.get_uncrawled_urls)
+         return [n["url"] for n in result.data()]
+    
     
     '''
     Get the outlinks of a url
@@ -171,14 +197,16 @@ class Driver():
 def example_test():
     driver = Driver()
     driver.delete_graph()
-    driver.update('0', 'a', ['b', 'c'])
-    driver.update('1', 'b', ['d', 'a'])
-    driver.update('2', 'c', ['e', 'b'])
+    print(driver.update('0', 'a', ['b', 'c']))
+    print(driver.update('1', 'b', ['d', 'a']))
+    print(driver.update('2', 'c', ['e', 'b']))
     
     print(driver.get_outlinks('c'))
     
     driver.run_pagerank()
     print(driver.get_pagerank(['0', '1', '2']))
+    
+    print(driver.get_uncrawled_urls())
 
 
 if __name__ == "__main__":
