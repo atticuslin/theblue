@@ -22,10 +22,15 @@ class QueryString():
         "WITH n\n"
         "OPTIONAL MATCH (n)-[old:LINKSTO]->()\n"
         "DELETE old\n"
-        "FOREACH (o IN $outlinks |\n"
-        "    MERGE (outlink:Page {url: o})\n"
-        "    MERGE (n)-[:LINKSTO]->(outlink)\n"
-        ")\n"
+        "WITH n\n"
+        "UNWIND $outlinks AS o\n"
+        "MERGE (outlink:Page {url: o})\n"
+        "MERGE (n)-[:LINKSTO]->(outlink)\n"
+        "RETURN outlink.url AS url, EXISTS(outlink.visited) AND outlink.visited AS visited\n"
+        # "FOREACH (o IN $outlinks |\n"
+        # "    MERGE (outlink:Page {url: o})\n"
+        # "    MERGE (n)-[:LINKSTO]->(outlink)\n"
+        # ")\n"
     )
     
     
@@ -53,12 +58,22 @@ class QueryString():
     
     
     '''
+    Query string for getting all visited nodes
+    '''
+    get_unvisited_urls = (
+        "MATCH (n:Page)\n"
+        "WHERE NOT EXISTS(n.visited) OR NOT n.visited\n"
+        "RETURN n.url AS url\n"
+    )
+    
+    
+    '''
     Query string for getting a page's outlinks
     Cypher params: $url
     '''
     get_outlinks = (
         "MATCH (:Page {url: $url})-->(out)\n"
-        "RETURN out.url AS url, out.visited as visited\n"
+        "RETURN out.url AS url, EXISTS(out.visited) AND out.visited AS visited\n"
     )
     
     
@@ -120,12 +135,14 @@ class Driver():
     @param doc_id document ID of base node to update
     @param url URL of base node to update
     @param outlinks list of outlinks of base node
+    @return list of dicts for each outlink node with url and visited keys
     '''
     def update(self, doc_id: str, url: str, outlinks: List[str]):
-        self.run_cypher(QueryString.update,
-                        parameters={"doc_id": doc_id,
-                                    "url": url,
-                                    "outlinks": outlinks})
+        result = self.run_cypher(QueryString.update,
+                                 parameters={"doc_id": doc_id,
+                                             "url": url,
+                                             "outlinks": outlinks})
+        return result.data()
 
 
     '''
@@ -145,7 +162,16 @@ class Driver():
                                  parameters={"doc_ids": doc_ids})
         data = result.data()
         return {n["doc_id"]: n["pagerank"] for n in data}
-
+    
+    
+    '''
+    Get all unvisited urls
+    @return list of unvisited urls
+    '''
+    def get_unvisited_urls(self):
+         result = self.run_cypher(QueryString.get_unvisited_urls)
+         return [n["url"] for n in result.data()]
+    
     
     '''
     Get the outlinks of a url
@@ -171,14 +197,16 @@ class Driver():
 def example_test():
     driver = Driver()
     driver.delete_graph()
-    driver.update('0', 'a', ['b', 'c'])
-    driver.update('1', 'b', ['d', 'a'])
-    driver.update('2', 'c', ['e', 'b'])
+    print(driver.update('0', 'a', ['b', 'c']))
+    print(driver.update('1', 'b', ['d', 'a']))
+    print(driver.update('2', 'c', ['e', 'b']))
     
     print(driver.get_outlinks('c'))
     
     driver.run_pagerank()
     print(driver.get_pagerank(['0', '1', '2']))
+    
+    print(driver.get_unvisited_urls())
 
 
 if __name__ == "__main__":
