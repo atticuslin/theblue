@@ -13,11 +13,12 @@ class QueryString():
     
     '''
     Query string for updating the webgraph
-    Cypher params: $url, $outlinks
+    Cypher params: $doc_id, $url, $outlinks
     '''
     update = (
         "MERGE (n:Page {url: $url})\n"
         "SET n.visited = true\n"
+        "SET n.doc_id = $doc_id\n"
         "WITH n\n"
         "OPTIONAL MATCH (n)-[old:LINKSTO]->()\n"
         "DELETE old\n"
@@ -46,19 +47,18 @@ class QueryString():
     '''
     get_pagerank = (
         "MATCH (n:Page)\n"
-        "WHERE n.url IN $urls\n"
-        "RETURN n.url, n.pagerank\n"
+        "WHERE n.doc_id IN $doc_ids\n"
+        "RETURN n.doc_id AS doc_id, n.pagerank as pagerank\n"
     )
     
     
     '''
     Query string for getting a page's outlinks
-    For testing only
     Cypher params: $url
     '''
     get_outlinks = (
         "MATCH (:Page {url: $url})-->(out)\n"
-        "RETURN out.url\n"
+        "RETURN out.url AS url, out.visited as visited\n"
     )
     
     
@@ -85,8 +85,9 @@ class Driver():
         self.driver = GraphDatabase.driver(uri, auth=auth)
         with self.driver.session() as session:
             session.run("CREATE INDEX ON :Page(url)")
+            session.run("CREATE INDEX ON :Page(doc_id)")
             session.run("CREATE CONSTRAINT ON (n:Page) ASSERT n.url IS UNIQUE")
-    
+            session.run("CREATE CONSTRAINT ON (n:Page) ASSERT n.doc_id IS UNIQUE")
         self.profile = False
     
     
@@ -116,12 +117,14 @@ class Driver():
     
     '''
     Update the webgraph
+    @param doc_id document ID of base node to update
     @param url URL of base node to update
     @param outlinks list of outlinks of base node
     '''
-    def update(self, url: str, outlinks: List[str]):
+    def update(self, doc_id: str, url: str, outlinks: List[str]):
         self.run_cypher(QueryString.update,
-                        parameters={"url": url,
+                        parameters={"doc_id": doc_id,
+                                    "url": url,
                                     "outlinks": outlinks})
 
 
@@ -133,20 +136,21 @@ class Driver():
     
     
     '''
-    Get pagerank values for urls
-    @param urls list of urls to get pagerank values for
-    @return list with dict of url, pagerank values for each url in urls
+    Get pagerank values for doc_ids
+    @param doc_ids list of doc_ids to get pagerank values for
+    @return dictionary with key for each doc_id, value as pagerank
     '''
-    def get_pagerank(self, urls: List[str]):
+    def get_pagerank(self, doc_ids: List[str]):
         result = self.run_cypher(QueryString.get_pagerank,
-                                 parameters={"urls": urls})
-        return result.data()
+                                 parameters={"doc_ids": doc_ids})
+        data = result.data()
+        return {n["doc_id"]: n["pagerank"] for n in data}
 
     
     '''
     Get the outlinks of a url
-    For testing only
     @param url URL to get outlinks of
+    @return list of nodes with properties
     '''
     def get_outlinks(self, url: str):
         result = self.run_cypher(QueryString.get_outlinks,
@@ -167,14 +171,14 @@ class Driver():
 def example_test():
     driver = Driver()
     driver.delete_graph()
-    driver.update('a', ['b', 'c'])
-    driver.update('b', ['d', 'a'])
-    driver.update('c', ['e', 'b'])
+    driver.update('0', 'a', ['b', 'c'])
+    driver.update('1', 'b', ['d', 'a'])
+    driver.update('2', 'c', ['e', 'b'])
     
-    print(driver.get_outlinks('a'))
+    print(driver.get_outlinks('c'))
     
     driver.run_pagerank()
-    print(driver.get_pagerank(['a', 'b', 'c', 'd']))
+    print(driver.get_pagerank(['0', '1', '2']))
 
 
 if __name__ == "__main__":
