@@ -11,6 +11,7 @@ app = Flask(__name__)
 
 CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
 alternator = 0
+MAX_LINKS = 10
 
 crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu",
 	"rpiathletics.com"]
@@ -22,18 +23,21 @@ def get_crawling_endpoint():
 
 @app.route('/rank_list', methods = ['POST'])
 def rank_list():
-	if request.method == 'POST':
+	if request.methods == 'POST':
 		print("Received Ranking Request")
 		url_list = request.get_json(force=True)['urls']
 		print("Url list: ", url_list)
-		pagerank_vals = rank(url_list)
-		print("Values: ", pagerank_vals)
-		return jsonify(pagerank_vals), status.HTTP_200_OK
+		try:
+			pagerank_vals = rank(url_list)
+			print("Values: ", pagerank_vals)
+			return jsonify(pagerank_vals), status.HTTP_200_OK
+		except java.lang.ArrayIndexOutOfBoundsException:
+			print("Tried to rank empty graph --> Sending empty json object")
+			return jsonify({})
+		#TODO: Need to catch case in which the graph is empty
 	else:
-		#TODO: Confirm Error state
-		return "Error", status.HTTP_501_NOT_IMPLEMENTED
+		return "Error", status.HTTP_405_METHOD_NOT_ALLOWED
 
-#TODO: Currently assumes there is just one link and docid but double check
 @app.route('/update', methods = ['POST'])
 def update():
 	if request.method == 'POST':
@@ -56,8 +60,7 @@ def update():
 			print("Error")
 			return "not ok", status.HTTP_500_INTERNAL_SERVER_ERROR
 	else:
-		#TODO: Confirm Error state
-		return "Error", status.HTTP_501_NOT_IMPLEMENTED
+		return "Error", status.HTTP_405_METHOD_NOT_ALLOWED
 
 #TODO: Test POST request success
 def crawl():
@@ -106,9 +109,9 @@ Get next links, post to crawling, and remove from queue after confirmation
 @modify queue by removing links once 200 success has been received from crawling
 @return Returns list of max number of links to be crawled
 '''
-def get_next_crawl(max_links=sys.maxsize):
+def get_next_crawl():
 	outlist = []
-	for ii in range(min(len(crawl_links), max_links)):
+	for ii in range(min(len(crawl_links), MAX_LINKS)):
 		outlist.append(crawl_links.pop(0))
 	return outlist
 
@@ -121,40 +124,6 @@ def rank(l):
 	graph.run_pagerank()
 	return graph.get_pagerank(l)
 
-
-def testing():
-	def exists_test():
-		'''
-		Add test link to graph
-		Assert that exists returns true with that same test link
-		Assert that exists returns false with a different test link
-		Add that different test link to graph
-		Assert that exists returns true now with that different test link
-		Assert that exists returns false with an empty/integer input
-		'''
-	def update_test():
-		'''
-		*Use neo4j get functions to test if links are added to graph
-		Call update on an empty graph with test url
-		Assert that graph now has test url
-		Call update with list of one test url that is in the graph already
-		Assert that new outlinks are created and that old inlinks are deleted
-		'''
-
-	def get_next_crawl_test():
-		'''
-		Call get_next_crawl(100) on empty graph and assert that it returns an empty list
-		Create basic graph with 10 nodes
-		Call get_next_crawl(3) on graph and assert that it returns three nodes to be crawled that are leaf nodes
-		'''
-
-	def rank_test():
-		'''
-		Create graph with 10 nodes
-		Assert that rank(list of the 10 urls in graph) returns a list with expected PageRank scores
-		Assert that rank(empty list) returns empty dictionary
-		Assert that rank(list of 3 urls not in graph) returns has all zero values
-		'''
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port = 80)
