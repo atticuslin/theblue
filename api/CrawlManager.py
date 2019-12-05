@@ -56,7 +56,6 @@ class CrawlManager():
         if self.done:
             return None
         # get the next url
-        print(self.idx, self.url_list)
         res = self.url_list[self.idx]
         self.idx += 1
         return res
