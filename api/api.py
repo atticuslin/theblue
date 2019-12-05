@@ -23,15 +23,16 @@ def get_crawling_endpoint():
 
 @app.route('/rank_list', methods = ['POST'])
 def rank_list():
-	if request.methods == 'POST':
+	if request.method == 'POST':
 		print("Received Ranking Request")
-		url_list = request.get_json(force=True)['urls']
-		print("Url list: ", url_list)
+		docids = request.get_json(force=True)['urls']
+		print("Docid list: ", docids)
 		try:
-			pagerank_vals = rank(url_list)
+			pagerank_vals = rank(docids)
 			print("Values: ", pagerank_vals)
 			return jsonify(pagerank_vals), status.HTTP_200_OK
-		except java.lang.ArrayIndexOutOfBoundsException:
+		except Exception as e:
+			print(e)
 			print("Tried to rank empty graph --> Sending empty json object")
 			return jsonify({})
 		#TODO: Need to catch case in which the graph is empty
