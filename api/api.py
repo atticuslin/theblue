@@ -125,9 +125,12 @@ def rank(l):
 	graph.run_pagerank()
 	return graph.get_pagerank(l)
 
+@app.route('/start', methods = ['GET'])
+def start_crawling():
+	if request.method == 'GET':
+		while(True):
+			if len(crawl_links) != 0:
+				crawl()
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')
-	print("Hello")
-	while(True):
-		crawl()
