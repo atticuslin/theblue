@@ -17,7 +17,8 @@ crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu", "r
 graph = queries.Driver() #Neo4j Graph Interface Initialization
 
 def get_crawling_endpoint():
-	alternator = not alternator
+	a = not alternator
+	alternator = a
 	return CRAWLING_ENDPOINTS[alternator]
 
 @app.route('/rank_list', methods = ['POST'])
