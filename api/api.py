@@ -4,17 +4,21 @@ from flask_api import status
 import requests
 import queries
 import sys
-import CrawlManager
+from CrawlManager import CrawlManager
 
 app = Flask(__name__)
 
 
-CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
+CRAWLING_ENDPOINTS = ["http://lspt-crawler1.cs.rpi.edu", "http://lspt-crawler3.cs.rpi.edu:3333"]
 alternator = 0
 MAX_LINKS = 10
 
 crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu", "rpiathletics.com"]
 graph = queries.Driver() #Neo4j Graph Interface Initialization
+manager = CrawlManager()
+for link in crawl_links:
+	manager.add(link)
+
 
 def get_crawling_endpoint():
 	global alternator
@@ -25,7 +29,7 @@ def get_crawling_endpoint():
 def rank_list():
 	if request.method == 'POST':
 		print("Received Ranking Request")
-		docids = request.get_json(force=True)['urls']
+		docids = request.get_json(force=True)['docids']
 		print("Docid list: ", docids)
 		try:
 			pagerank_vals = rank(docids)
@@ -41,6 +45,7 @@ def rank_list():
 
 @app.route('/update', methods = ['POST'])
 def update():
+	global manager
 	if request.method == 'POST':
 		print("Received update:")
 		request_data = request.get_json(force=True)
@@ -53,7 +58,10 @@ def update():
 		#TODO: If receiving multiple links, add loop here
 		result = update(docid, crawled_link, outlinks)
 		print("result: ", result)
-		if result:
+		for r in result:
+			if not r["crawled"]:
+				manager.add(r["url"])
+		if result:	
 			print("Returned Success")
 			return "ok", status.HTTP_200_OK
 		else:
@@ -105,6 +113,8 @@ Get next links, post to crawling, and remove from queue after confirmation
 @return Returns list of max number of links to be crawled
 '''
 def get_next_crawl():
+	global manager
+	return manager.get_next_crawl()
 	outlist = []
 	for ii in range(min(len(crawl_links), MAX_LINKS)):
 		outlist.append(crawl_links.pop(0))
@@ -128,8 +138,9 @@ def rank(l):
 
 @app.route('/start', methods = ['GET'])
 def start_crawling():
+	global manager
 	if request.method == 'GET':
-		while(True):
+		while not manager.done:
 			if len(crawl_links) != 0:
 				crawl()
 
