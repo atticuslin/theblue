@@ -145,8 +145,8 @@ def start_crawling():
 		while not manager.done:
 			if len(crawl_links) != 0:
 				crawl()
-		return
-	return
+		return "Help"
+	return "Help"
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')
