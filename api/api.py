@@ -4,7 +4,7 @@ from flask_api import status
 import requests
 import queries
 import sys
-
+import CrawlManager
 
 app = Flask(__name__)
 
@@ -13,9 +13,8 @@ CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
 alternator = 0
 MAX_LINKS = 10
 
-crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu",
-	"rpiathletics.com"]
-graph = queries.Driver()#Neo4j Graph Interface Initialization
+crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu", "rpiathletics.com"]
+graph = queries.Driver() #Neo4j Graph Interface Initialization
 
 def get_crawling_endpoint():
 	alternator = not alternator
@@ -63,12 +62,6 @@ def update():
 	else:
 		return "Error", status.HTTP_405_METHOD_NOT_ALLOWED
 
-#TODO: Test POST request success
-def crawl():
-	linkstosend = dict()
-	linkstosend['urls'] = get_next_crawl()
-	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
-	response.raise_for_status()
 
 @app.route('/')
 def testAPI():
@@ -116,6 +109,13 @@ def get_next_crawl():
 		outlist.append(crawl_links.pop(0))
 	return outlist
 
+#TODO: Test POST request success
+def crawl():
+	linkstosend = dict()
+	linkstosend['urls'] = get_next_crawl()
+	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
+	response.raise_for_status()
+
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
 @param l list of links to rank in order
@@ -128,3 +128,5 @@ def rank(l):
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')
+	while(True):
+		crawl()
