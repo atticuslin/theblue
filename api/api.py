@@ -10,12 +10,12 @@ app = Flask(__name__)
 
 
 CRAWLING_ENDPOINTS = ["http://lspt-crawler1.cs.rpi.edu", "http://lspt-crawler3.cs.rpi.edu:3333"]
-alternator = 0
+alternator = 1
 MAX_LINKS = 10
 
 crawl_links = ["http://rpi.edu", "http://cs.rpi.edu", "http://info.rpi.edu", "http://admissions.rpi.edu", "http://rpiathletics.com"]
 graph = queries.Driver() #Neo4j Graph Interface Initialization
-manager = CrawlManager()
+manager = CrawlManager(graph)
 for link in crawl_links:
 	manager.add(link)
 
@@ -125,7 +125,7 @@ def crawl():
 	linkstosend = get_next_crawl()#dict()
 	# linkstosend['links'] = get_next_crawl()
 	endpoint = get_crawling_endpoint()
-	print("Sending to: ," endpoint)
+	print("Sending to: ", endpoint)
 	response = requests.post(endpoint + '/crawl', json=linkstosend)
 	# response.raise_for_status()
 
@@ -144,8 +144,11 @@ def start_crawling():
 	if request.method == 'GET':
 		while not manager.done:
 			if len(crawl_links) != 0:
-				crawl()
-		return "Help"
+				try:
+					crawl()
+				except Exception as e:
+					print(e)
+		return "End of GET"
 	return "Help"
 
 if __name__ == '__main__':
