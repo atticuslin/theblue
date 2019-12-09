@@ -13,7 +13,7 @@ CRAWLING_ENDPOINTS = ["http://lspt-crawler1.cs.rpi.edu", "http://lspt-crawler3.c
 alternator = 0
 MAX_LINKS = 10
 
-crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu", "rpiathletics.com"]
+crawl_links = ["http://rpi.edu", "http://cs.rpi.edu", "http://info.rpi.edu", "http://admissions.rpi.edu", "http://rpiathletics.com"]
 graph = queries.Driver() #Neo4j Graph Interface Initialization
 manager = CrawlManager()
 for link in crawl_links:
@@ -29,7 +29,7 @@ def get_crawling_endpoint():
 def rank_list():
 	if request.method == 'POST':
 		print("Received Ranking Request")
-		docids = request.get_json(force=True)['docids']
+		docids = request.get_json(force=True)
 		print("Docid list: ", docids)
 		try:
 			pagerank_vals = rank(docids)
@@ -122,8 +122,8 @@ def get_next_crawl():
 
 #TODO: Test POST request success
 def crawl():
-	linkstosend = dict()
-	linkstosend['urls'] = get_next_crawl()
+	linkstosend = get_next_crawl()#dict()
+	# linkstosend['links'] = get_next_crawl()
 	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
 	response.raise_for_status()
 
