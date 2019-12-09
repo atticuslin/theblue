@@ -9,4 +9,4 @@ docker run \
     --volume=$parent_path':/plugins' \
     --env NEO4J_AUTH=neo4j/test \
     --env NEO4J_dbms_security_procedures_unrestricted=algo.* \
-    neo4j:3.5.12
+    neo4j:3.5.12 &
