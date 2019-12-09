@@ -12,19 +12,19 @@ class CrawlManager():
     def __init__(self, driver):
         self.done = False
         self.driver = driver
-        self.init()
+        self.init(first=True)
     
     
     '''
     (Re)initialize the uncrawled URL data structures and index
     '''
-    def init(self):
+    def init(self, first=False):
         # get list of uncrawled URLs from neo4j
         self.url_list = self.driver.get_uncrawled_urls()
         self.url_set = set(self.url_list)
         self.idx = 0
         # if all URLs have been crawled
-        if len(self.url_list) == 0:
+        if not first and len(self.url_list) == 0:
             self.done = True
     
     
