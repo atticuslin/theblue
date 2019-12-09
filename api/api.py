@@ -128,5 +128,6 @@ def rank(l):
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')
+	print("Hello")
 	while(True):
 		crawl()
