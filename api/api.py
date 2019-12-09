@@ -124,8 +124,10 @@ def get_next_crawl():
 def crawl():
 	linkstosend = get_next_crawl()#dict()
 	# linkstosend['links'] = get_next_crawl()
-	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
-	response.raise_for_status()
+	endpoint = get_crawling_endpoint()
+	print("Sending to: ," endpoint)
+	response = requests.post(endpoint + '/crawl', json=linkstosend)
+	# response.raise_for_status()
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
