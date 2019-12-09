@@ -70,7 +70,7 @@ def crawl():
 	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
 	response.raise_for_status()
 
-@app.route('/test')
+@app.route('/')
 def testAPI():
 	return "Working!"
 
@@ -127,4 +127,4 @@ def rank(l):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port = 80)
+	app.run(host='0.0.0.0')
