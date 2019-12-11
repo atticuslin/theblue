@@ -143,11 +143,11 @@ def start_crawling():
 	global manager
 	if request.method == 'GET':
 		while not manager.done:
-			if len(crawl_links) != 0:
-				try:
-					crawl()
-				except Exception as e:
-                                    print('EXCEPTION: ', e)
+			print("Sending links...")
+			try:
+				crawl()
+			except Exception as e:
+				print('EXCEPTION: ', e)
 		return "End of GET"
 	return "Help"
 
