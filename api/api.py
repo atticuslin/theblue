@@ -14,7 +14,11 @@ CRAWLING_ENDPOINTS = ["http://lspt-crawler1.cs.rpi.edu", "http://lspt-crawler3.c
 alternator = 1
 MAX_LINKS = 10
 
-crawl_links = ["http://rpi.edu", "http://cs.rpi.edu", "http://info.rpi.edu", "http://admissions.rpi.edu", "http://rpiathletics.com"]
+crawl_links = ['http://rpi.edu',  'http://cs.rpi.edu', 'http://info.rpi.edu',
+	'http://admissions.rpi.edu', 'http://rpiathletics.com' , 'https://research.rpi.edu',
+	'https://news.rpi.edu', 'https://studentlife.rpi.edu', 'https://giving.rpi.edu', 
+	'https://studenthealth.rpi.edu', 'https://sexualviolence.rpi.edu/', 'https://sll.rpi.edu/',
+	'https://union.rpi.edu']
 graph = queries.Driver() #Neo4j Graph Interface Initialization
 graph.add_initial_urls(crawl_links)
 manager = CrawlManager(graph)
