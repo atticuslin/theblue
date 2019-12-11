@@ -15,6 +15,7 @@ MAX_LINKS = 10
 
 crawl_links = ["http://rpi.edu", "http://cs.rpi.edu", "http://info.rpi.edu", "http://admissions.rpi.edu", "http://rpiathletics.com"]
 graph = queries.Driver() #Neo4j Graph Interface Initialization
+graph.add_initial_urls(crawl_links)
 manager = CrawlManager(graph)
 for link in crawl_links:
 	manager.add(link)
