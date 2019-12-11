@@ -114,11 +114,11 @@ Get next links, post to crawling, and remove from queue after confirmation
 '''
 def get_next_crawl():
 	global manager
-	return manager.get_next_crawl()
-	outlist = []
-	for ii in range(min(len(crawl_links), MAX_LINKS)):
-		outlist.append(crawl_links.pop(0))
-	return outlist
+	return manager.get_next_url()
+	# outlist = []
+	# for ii in range(min(len(crawl_links), MAX_LINKS)):
+	# 	outlist.append(crawl_links.pop(0))
+	# return outlist
 
 #TODO: Test POST request success
 def crawl():
