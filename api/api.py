@@ -4,20 +4,24 @@ from flask_api import status
 import requests
 import queries
 import sys
-
+from CrawlManager import CrawlManager
 
 app = Flask(__name__)
 
 
-CRAWLING_ENDPOINTS = ["lspt-crawler1.cs.rpi.edu", "lspt-crawler2.cs.rpi.edu"]
-alternator = 0
+CRAWLING_ENDPOINTS = ["http://lspt-crawler1.cs.rpi.edu", "http://lspt-crawler3.cs.rpi.edu:3333"]
+alternator = 1
 MAX_LINKS = 10
 
-crawl_links = ["rpi.edu", "cs.rpi.edu", "info.rpi.edu", "admissions.rpi.edu",
-	"rpiathletics.com"]
-graph = queries.Driver()#Neo4j Graph Interface Initialization
+crawl_links = ["http://rpi.edu", "http://cs.rpi.edu", "http://info.rpi.edu", "http://admissions.rpi.edu", "http://rpiathletics.com"]
+graph = queries.Driver() #Neo4j Graph Interface Initialization
+manager = CrawlManager(graph)
+for link in crawl_links:
+	manager.add(link)
+
 
 def get_crawling_endpoint():
+	global alternator
 	alternator = not alternator
 	return CRAWLING_ENDPOINTS[alternator]
 
@@ -25,7 +29,7 @@ def get_crawling_endpoint():
 def rank_list():
 	if request.method == 'POST':
 		print("Received Ranking Request")
-		docids = request.get_json(force=True)['urls']
+		docids = request.get_json(force=True)
 		print("Docid list: ", docids)
 		try:
 			pagerank_vals = rank(docids)
@@ -41,6 +45,7 @@ def rank_list():
 
 @app.route('/update', methods = ['POST'])
 def update():
+	global manager
 	if request.method == 'POST':
 		print("Received update:")
 		request_data = request.get_json(force=True)
@@ -53,7 +58,10 @@ def update():
 		#TODO: If receiving multiple links, add loop here
 		result = update(docid, crawled_link, outlinks)
 		print("result: ", result)
-		if result:
+		for r in result:
+			if not r["crawled"]:
+				manager.add(r["url"])
+		if result:	
 			print("Returned Success")
 			return "ok", status.HTTP_200_OK
 		else:
@@ -63,12 +71,6 @@ def update():
 	else:
 		return "Error", status.HTTP_405_METHOD_NOT_ALLOWED
 
-#TODO: Test POST request success
-def crawl():
-	linkstosend = dict()
-	linkstosend['urls'] = get_next_crawl()
-	response = requests.post(get_crawling_endpoint() + '/crawl', json=linkstosend)
-	response.raise_for_status()
 
 @app.route('/')
 def testAPI():
@@ -111,10 +113,21 @@ Get next links, post to crawling, and remove from queue after confirmation
 @return Returns list of max number of links to be crawled
 '''
 def get_next_crawl():
+	global manager
+	return manager.get_next_crawl()
 	outlist = []
 	for ii in range(min(len(crawl_links), MAX_LINKS)):
 		outlist.append(crawl_links.pop(0))
 	return outlist
+
+#TODO: Test POST request success
+def crawl():
+	linkstosend = get_next_crawl()#dict()
+	# linkstosend['links'] = get_next_crawl()
+	endpoint = get_crawling_endpoint()
+	print("Sending to: ", endpoint)
+	response = requests.post(endpoint + '/crawl', json=linkstosend)
+	# response.raise_for_status()
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
@@ -125,6 +138,18 @@ def rank(l):
 	graph.run_pagerank()
 	return graph.get_pagerank(l)
 
+@app.route('/start', methods = ['GET'])
+def start_crawling():
+	global manager
+	if request.method == 'GET':
+		while not manager.done:
+			if len(crawl_links) != 0:
+				try:
+					crawl()
+				except Exception as e:
+                                    print('EXCEPTION: ', e)
+		return "End of GET"
+	return "Help"
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0')
+	app.run(host='0.0.0.0', port = 80)
