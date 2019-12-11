@@ -2,6 +2,8 @@
 from typing import List
 from neo4j import GraphDatabase
 
+from CrawlManager import CrawlManager
+
 uri = "bolt://localhost:7687"
 auth=("neo4j", "test")
 
@@ -31,6 +33,16 @@ class QueryString():
         # "    MERGE (outlink:Page {url: o})\n"
         # "    MERGE (n)-[:LINKSTO]->(outlink)\n"
         # ")\n"
+    )
+    
+    
+    '''
+    Query string for adding the initial URLs
+    Cypher params: $urls
+    '''
+    add_initial_urls = (
+        "UNWIND $urls as u\n"
+        "MERGE (:Page {url: u})\n"
     )
     
     
@@ -131,6 +143,15 @@ class Driver():
     
     
     '''
+    Add initial URLs
+    @param urls URLs to add to the initial neo4j graph
+    '''
+    def add_initial_urls(self, urls):
+        self.run_cypher(QueryString.add_initial_urls,
+                        parameters={"urls": urls})
+    
+    
+    '''
     Update the webgraph
     @param doc_id document ID of base node to update
     @param url URL of base node to update
@@ -197,16 +218,38 @@ class Driver():
 def example_test():
     driver = Driver()
     driver.delete_graph()
-    print(driver.update('0', 'a', ['b', 'c']))
-    print(driver.update('1', 'b', ['d', 'a']))
-    print(driver.update('2', 'c', ['e', 'b']))
+    driver.add_initial_urls(['0', '1', '2'])
+    # print(driver.update('0', 'a', ['b', 'c']))
+    # print(driver.update('1', 'b', ['d', 'a']))
+    # print(driver.update('2', 'c', ['e', 'b']))
+    # 
+    # print(driver.get_outlinks('c'))
+    # 
+    # driver.run_pagerank()
+    # print(driver.get_pagerank(['0', '1', '2']))
+    # 
+    # print(driver.get_uncrawled_urls())
     
-    print(driver.get_outlinks('c'))
     
-    driver.run_pagerank()
-    print(driver.get_pagerank(['0', '1', '2']))
+    # print({'asdfa'})
+    # print(set(['adsf', 'asdf']))
+    # print(set({[['adsf']]}))
+    # cm = CrawlManager(driver)
+    # n = cm.get_next_url()
+    # cm.add('ashdkf')
+    # cm.add('asdjflja')
+    # cm.add(['mnbvvvbb'])
+    # cm.add(['12', '1234'])
+    # # driver.update(n, n, ['b'])
+    # 
+    # while not cm.done:
+    #     n = cm.get_next_url()
+    #     print(n)
+    #     if n is None:
+    #         break
+    #     driver.update(n, n, ['b'])
+        
     
-    print(driver.get_uncrawled_urls())
 
 
 if __name__ == "__main__":
