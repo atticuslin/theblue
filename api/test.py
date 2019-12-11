@@ -58,15 +58,6 @@ class TestUpdate(unittest.TestCase):
 # tests getting page rank
 class TestRank(unittest.TestCase):
 
-	# tests ranking single node
-	def test_solo_node(self):
-		rank_driver = queries.Driver()
-		rank_driver.update("0", "https://www.site-0.com", [])
-		rank_driver.run_pagerank()
-		rankings = rank_driver.get_pagerank(["0"])
-		assert len(rankings) == 1
-		assert rankings["https://www.site-0.com"] > 0
-
 	# tests ranking one link in a graph
 	def test_single(self):
 		rank_driver = queries.Driver()
