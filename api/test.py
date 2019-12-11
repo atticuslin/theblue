@@ -32,17 +32,17 @@ class TestUpdate(unittest.TestCase):
 	def test_add_out_links(self):
 		update_driver = queries.Driver()
 		update_driver.update("0", "https://www.site-0.com", [])
-		assert len(update_driver.get_out_links("https://www.site-0.com")) == 0
+		assert len(update_driver.get_outlinks("https://www.site-0.com")) == 0
 		update_driver.update("0", "https://www.site-0.com", ["https://www.site-1.com"])
-		assert len(update_driver.get_out_links("https://www.site-0.com")) == 1
+		assert len(update_driver.get_outlinks("https://www.site-0.com")) == 1
 
 	# tests updating and removing out links
 	def test_remove_out_links(self):
 		update_driver = queries.Driver()
 		update_driver.update("1", "https://www.site-1.com", ["https://www.site-2.com"])
-		assert len(update_driver.get_out_links("https://www.site-0.com")) == 1
+		assert len(update_driver.get_outlinks("https://www.site-0.com")) == 1
 		update_driver.update("1", "https://www.site-1.com", [])
-		assert len(update_driver.get_out_links("https://www.site-0.com")) == 0
+		assert len(update_driver.get_outlinks("https://www.site-0.com")) == 0
 
 	# tests updating 1000 links in under 15 seconds
 	def test_efficiency(self):
