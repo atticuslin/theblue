@@ -124,12 +124,13 @@ def get_next_crawl():
 
 #TODO: Test POST request success
 def crawl():
-	linkstosend = get_next_crawl()#dict()
+	linkstosend = [get_next_crawl()]#dict()
 	# linkstosend['links'] = get_next_crawl()
 	endpoint = get_crawling_endpoint()
 	print("Sending to: ", endpoint)
 	response = requests.post(endpoint + '/crawl', json=linkstosend)
 	# response.raise_for_status()
+	return response
 
 '''
 l is list of URLs from ranking; return dictionary/JSON with URL -> PageRank Value
@@ -147,7 +148,8 @@ def start_crawling():
 		while not manager.done:
 			print("Sending links...")
 			try:
-				crawl()
+				response = crawl()
+				print(response)
 			except Exception as e:
 				print('EXCEPTION: ', e)
 			time.sleep(5)
