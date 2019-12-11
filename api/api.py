@@ -5,6 +5,7 @@ import requests
 import queries
 import sys
 from CrawlManager import CrawlManager
+import time
 
 app = Flask(__name__)
 
@@ -149,6 +150,7 @@ def start_crawling():
 				crawl()
 			except Exception as e:
 				print('EXCEPTION: ', e)
+			time.sleep(5)
 		return "End of GET"
 	return "Help"
 
